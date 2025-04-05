@@ -115,6 +115,29 @@ def upload_file():
 
         else:
             return "กรุณาอัปโหลดเฉพาะไฟล์ .xlsx", 400
+        
+@app.route("/api/upload-file", methods=["POST"])
+def api_upload_file():
+    if 'file' not in request.files:
+        return "❌ ไม่พบไฟล์ที่ส่งมา", 400
+    file = request.files['file']
+    if file.filename.endswith('.xlsx'):
+        file.save("BU.xlsx")
+        try:
+            df_raw = pd.read_excel("BU.xlsx", skiprows=9, usecols="E,F,I,J")
+            df_ready = df_raw.rename(columns={
+                "ItemNo": "ไอเท็ม",
+                "Description": "สินค้า",
+                "Selling Price": "ราคา",
+                "ASOH": "มี Stock อยู่ที่"
+            })
+            df_ready.to_excel("data_ready.xlsx", index=False)
+            df_ready.to_csv("data_ready.csv", index=False)
+            df_ready.to_json("data_ready.json", orient="records", force_ascii=False)
+            return "✅ อัปโหลดและแปลงไฟล์สำเร็จ!"
+        except Exception as e:
+            return f"❌ Error: {str(e)}", 500
+    return "❌ รองรับเฉพาะไฟล์ .xlsx", 400
 
     # HTML ฟอร์ม
     html_form = '''
@@ -134,28 +157,3 @@ def upload_file():
     '''
     return render_template_string(html_form)
 
-@app.route("/api/upload-file", methods=["POST"])
-def api_upload_file():
-    if 'file' not in request.files:
-        return "❌ ไม่พบไฟล์ที่ส่งมา", 400
-    file = request.files['file']
-    if file.filename == '':
-        return "❌ ไม่ได้เลือกไฟล์", 400
-    if file and file.filename.endswith('.xlsx'):
-        file.save("BU.xlsx")
-        try:
-            df_raw = pd.read_excel("BU.xlsx", skiprows=9, usecols="E,F,I,J")
-            df_ready = df_raw.rename(columns={
-                "ItemNo": "ไอเท็ม",
-                "Description": "สินค้า",
-                "Selling Price": "ราคา",
-                "ASOH": "มี Stock อยู่ที่"
-            })
-            df_ready.to_excel("data_ready.xlsx", index=False)
-            df_ready.to_csv("data_ready.csv", index=False)
-            df_ready.to_json("data_ready.json", orient="records", force_ascii=False)
-            return "✅ อัปโหลดและแปลงไฟล์สำเร็จ!"
-        except Exception as e:
-            return f"❌ เกิดข้อผิดพลาดขณะประมวลผล: {str(e)}", 500
-    else:
-        return "❌ รองรับเฉพาะไฟล์ .xlsx", 400
