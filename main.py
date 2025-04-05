@@ -29,7 +29,7 @@ def callback():
                 user_msg = event["message"]["text"]
                 reply_token = event["replyToken"]
                 if user_msg.startswith("สินค้า:"):
-                    keyword = user_msg.replace("สินค้า:", "").strip()
+                    keyword = user_msg.split(":", 1)[1].strip()
                     answer = search_product(keyword)
                     reply_to_line(reply_token, answer)
         return jsonify({"status": "ok"})
