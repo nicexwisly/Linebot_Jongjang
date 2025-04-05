@@ -1,6 +1,3 @@
 flask
-gunicorn
 pandas
 openpyxl
-requests
-openai
