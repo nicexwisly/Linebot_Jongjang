@@ -1,4 +1,3 @@
-
 from flask import Flask, request, jsonify, render_template_string
 import openai
 import pandas as pd
@@ -86,3 +85,51 @@ def upload_file():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
+@app.route("/upload", methods=["GET", "POST"])
+def upload_file():
+    if request.method == "POST":
+        if 'file' not in request.files:
+            return "ไม่พบไฟล์ที่อัปโหลด", 400
+        file = request.files['file']
+        if file.filename == '':
+            return "กรุณาเลือกไฟล์", 400
+        if file and file.filename.endswith('.xlsx'):
+            file.save("BU.xlsx")
+
+            # อ่านข้อมูลจากแถวที่ 10 (skiprows=9), คอลัมน์ E, F, I, J
+            try:
+                df_raw = pd.read_excel("BU.xlsx", skiprows=9, usecols="E,F,I,J")
+                df_ready = df_raw.rename(columns={
+                    "ItemNo": "ไอเท็ม",
+                    "Description": "สินค้า",
+                    "Selling Price": "ราคา",
+                    "ASOH": "มี Stock อยู่ที่"
+                })
+                df_ready.to_excel("data_ready.xlsx", index=False)
+                df_ready.to_csv("data_ready.csv", index=False)
+                df_ready.to_json("data_ready.json", orient="records", force_ascii=False)
+                return "✅ แปลงข้อมูลสำเร็จแล้ว! ได้ทั้ง .xlsx / .csv / .json"
+            except Exception as e:
+                return f"เกิดข้อผิดพลาดขณะอ่านไฟล์: {str(e)}", 500
+
+        else:
+            return "กรุณาอัปโหลดเฉพาะไฟล์ .xlsx", 400
+
+    # HTML ฟอร์ม
+    html_form = '''
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>อัปโหลด Stock Excel</title>
+    </head>
+    <body>
+        <h2>📤 อัปโหลดไฟล์ Stock BU (.xlsx)</h2>
+        <form method="POST" enctype="multipart/form-data">
+            <input type="file" name="file" accept=".xlsx" required>
+            <button type="submit">อัปโหลดและแปลง</button>
+        </form>
+    </body>
+    </html>
+    '''
+    return render_template_string(html_form)
