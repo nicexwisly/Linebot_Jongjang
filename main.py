@@ -29,13 +29,19 @@ def callback():
             if event["type"] == "message" and event["message"]["type"] == "text":
                 user_msg = event["message"]["text"]
                 reply_token = event["replyToken"]
+
                 if user_msg.startswith("สินค้า:"):
                     keyword = user_msg.replace("สินค้า:", "").strip()
                     answer = search_product(keyword)
-                    return jsonify({"status": "ok", "reply": answer})
-                return jsonify({"status": "ignored"}), 200
+                    reply_to_line(reply_token, answer)
+                    return jsonify({"status": "ok"})
+
+        # กรณีไม่เข้าเงื่อนไขใดๆ
+        return jsonify({"status": "ignored"})
+
     except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return jsonify({"error": str(e)}), 500
+
 
 @app.route("/", methods=["GET"])
 def home():
