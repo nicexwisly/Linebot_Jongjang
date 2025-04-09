@@ -1,13 +1,16 @@
 from flask import Flask, request, jsonify
 import pandas as pd
+import json
 import os
 import requests
 
 app = Flask(__name__)
 
 FILE_NAME = "data.xlsx"
-LINE_ACCESS_TOKEN = os.getenv("LINE_ACCESS_TOKEN") or "9spdlar4aOXRzhHf+XTwS3ZOC+Ya6KsET864BZwnAJPlJZspkRCoYpVWFNLmowSPQlANaXWCgmU8JpDx6asksVn5768f8j150oksJA84zBOdWV/3jWPpgbCb89RT2I0fTWSyAMnJ1HF5vQokPCrkbQdB04t89/1O/w1cDnyilFU="
+JSON_FILE_NAME = "data_ready.json"
+LINE_ACCESS_TOKEN = os.getenv("LINE_ACCESS_TOKEN") or "9spdlar4aOXRzhHf+XTwS3ZOC+Ya6KsET864BZwnAJPlJZspkRCoYpVWFNLmowSPQlANaXWCgmU8JpDx6asksVn5768f8j150oksJA84zBOdWV/3jWPpgbCb89RT2I0fTWSyAMnJ1HF5vQokPCrkbQdB04t89/1O/w1cDnyilFU=นี่"
 
+# ===== ส่งข้อความกลับ LINE =====
 def reply_to_line(reply_token, message):
     headers = {
         "Content-Type": "application/json",
@@ -20,31 +23,43 @@ def reply_to_line(reply_token, message):
     r = requests.post("https://api.line.me/v2/bot/message/reply", headers=headers, json=body)
     print("LINE API response:", r.status_code, r.text)
 
+# ===== อัปโหลด Excel แบบเดิม =====
 @app.route("/api/upload-file", methods=["POST"])
 def upload_file():
     if 'file' not in request.files:
-        return jsonify({"status": "fail", "message": "ไม่พบไฟล์ในคำขอ"}), 400
+        return jsonify({"status": "fail", "message": "ไม่พบไฟล์"}), 400
     file = request.files['file']
     if file.filename == '':
         return jsonify({"status": "fail", "message": "ชื่อไฟล์ว่าง"}), 400
     try:
         file.save(FILE_NAME)
-        return jsonify({"status": "success", "message": f"อัปโหลดไฟล์ {FILE_NAME} สำเร็จ!"}), 200
+        return jsonify({"status": "success", "message": f"อัปโหลดไฟล์ {FILE_NAME} สำเร็จ!"})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
-def search_product(keyword):
+# ===== อัปโหลด JSON แบบใหม่ =====
+@app.route("/api/upload-json", methods=["POST"])
+def upload_json():
     try:
-        df = pd.read_excel(FILE_NAME, skiprows=9, usecols="E,F,I,J")
-        df.columns = ["ไอเท็ม", "สินค้า", "ราคา", "มี Stock อยู่ที่"]
-    except FileNotFoundError:
-        return "❌ ไม่พบไฟล์ข้อมูล กรุณาอัปโหลดไฟล์ก่อน"
-    result = df[df["สินค้า"].str.contains(keyword, case=False, na=False)]
-    if result.empty:
-        return "❌ ขออภัย ไม่พบสินค้าที่ค้นหาในระบบ"
-    row = result.iloc[0]
-    return f"พบแล้วค่ะ: {row['ไอเท็ม']} {row['สินค้า']} ราคา {row['ราคา']} บาท เหลือ {row['มี Stock อยู่ที่']} ชิ้น"
+        data = request.get_json()
+        with open(JSON_FILE_NAME, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+        return jsonify({"status": "success", "message": "อัปโหลด JSON สำเร็จ!"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
 
+# ===== ค้นหาข้อมูลจาก JSON =====
+def search_product(keyword):
+    if not os.path.exists(JSON_FILE_NAME):
+        return "❌ ไม่พบไฟล์ข้อมูล กรุณาอัปโหลดก่อน"
+    with open(JSON_FILE_NAME, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    for item in data:
+        if keyword in item["สินค้า"]:
+            return f"พบแล้วค่ะ: {item['ไอเท็ม']} {item['สินค้า']} ราคา {item['ราคา']} บาท เหลือ {item['มี Stock อยู่ที่']} ชิ้น"
+    return "❌ ขออภัย ไม่พบสินค้าที่ค้นหาในระบบ"
+
+# ===== Webhook LINE Bot =====
 @app.route("/callback", methods=["POST"])
 def callback():
     body = request.json
