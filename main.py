@@ -25,7 +25,7 @@ def search_product(keyword):
     if not results:
         return "ขออภัย ไม่พบสินค้าที่ค้นหาในระบบ"
     row = results[0]
-    return f"พบแล้วค่ะ: {row['ไลน์ทีม']} | {row['สินค้า']} ราคา {row['ราคา']} บาท เหลือ {row['มี Stock อยู่ที่']} ชิ้น"
+    return f"พบแล้วค่ะ: {row['ไอเท็ม']} | {row['สินค้า']} ราคา {row['ราคา']} บาท เหลือ {row['มี Stock อยู่ที่']} ชิ้น"
 
 def reply_to_line(reply_token, message):
     url = "https://api.line.me/v2/bot/message/reply"
