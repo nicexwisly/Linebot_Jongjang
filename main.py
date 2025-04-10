@@ -74,6 +74,7 @@ def upload_json():
         print("✅ ได้รับ JSON แล้ว:", len(json_data), "รายการ")
         return jsonify({"status": "success"})
     except Exception as e:
+        print("ERROR:", str(e)) 
         return jsonify({"status": "error", "message": str(e)}), 500
 
 @app.route("/", methods=["GET"])
