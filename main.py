@@ -59,20 +59,26 @@ def search_product(keyword):
 def callback():
     body = request.json
     try:
+        print("📥 body:", body)
         events = body.get("events", [])
         for event in events:
             if event.get("type") == "message" and event["message"]["type"] == "text":
                 user_msg = event["message"]["text"]
                 reply_token = event["replyToken"]
+                print("👤 user_msg:", user_msg)
+
                 if user_msg.startswith("สินค้า:"):
                     keyword = user_msg.replace("สินค้า:", "").strip()
                     answer = search_product(keyword)
                 else:
                     answer = "กรุณาพิมพ์ว่า สินค้า: ตามด้วยชื่อสินค้าที่ต้องการค้นหา"
+
                 reply_to_line(reply_token, answer)
         return jsonify({"status": "ok"}), 200
+
     except Exception as e:
-        print("❌ Error:", str(e))
+        import traceback
+        traceback.print_exc()  # ✅ พิมพ์ error แบบละเอียด
         return jsonify({"error": str(e)}), 500
     
 json_data = []  # ตัวแปรสำหรับเก็บ JSON ที่ upload เข้ามา
@@ -93,4 +99,4 @@ def home():
     return "ระบบพร้อมทำงานแล้ว!"
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
+    app.run(host="0.0.0.0", port=10000, debug=True)  # ✅ debug=True
