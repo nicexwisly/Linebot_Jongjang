@@ -98,14 +98,10 @@ def upload_json():
 @app.route("/", methods=["GET"])
 def home():
     user_agent = request.headers.get("User-Agent", "")
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
     if "UptimeRobot" in user_agent:
-        print(f"[{timestamp}] 📡 UptimeRobot pinged this server.")
-    else:
-        print(f"[{timestamp}] 🌐 Regular browser/server accessed home route.")
-
-    return "ระบบพร้อมทำงานแล้ว!"
+        print("📡 ตรวจพบการ Ping จาก UptimeRobot")
+        return "Ping จาก UptimeRobot", 200
+    return "ระบบพร้อมทำงานแล้ว!", 200
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000, debug=True)  # ✅ debug=Truez   
