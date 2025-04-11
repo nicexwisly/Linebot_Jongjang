@@ -60,26 +60,23 @@ def search_product(keyword):
 def callback():
     body = request.json
     try:
-        print("📥 body:", body)
         events = body.get("events", [])
         for event in events:
             if event.get("type") == "message" and event["message"]["type"] == "text":
                 user_msg = event["message"]["text"]
                 reply_token = event["replyToken"]
-                print("👤 user_msg:", user_msg)
 
                 if user_msg.startswith("@@"):
                     keyword = user_msg.replace("@@", "").strip()
                     answer = search_product(keyword)
+                    reply_to_line(reply_token, answer)
                 else:
-                    answer = "กรุณาพิมพ์ว่า @@ ตามด้วยชื่อสินค้าที่ต้องการค้นหา"
+                    # ❌ ถ้าไม่ใช่ @@ → ไม่ตอบกลับ
+                    return "", 200
 
-                reply_to_line(reply_token, answer)
         return jsonify({"status": "ok"}), 200
-
     except Exception as e:
-        import traceback
-        traceback.print_exc()  # ✅ พิมพ์ error แบบละเอียด
+        print("❌ Error:", str(e))
         return jsonify({"error": str(e)}), 500
     
 json_data = []  # ตัวแปรสำหรับเก็บ JSON ที่ upload เข้ามา
@@ -95,7 +92,7 @@ def upload_json():
         print("ERROR:", str(e)) 
         return jsonify({"status": "error", "message": str(e)}), 500
 
-@app.route("/", methods=["GET"])
+@app.route("/", methods=["GET", "HEAD"])
 def home():
     user_agent = request.headers.get("User-Agent", "")
     if "UptimeRobot" in user_agent:
