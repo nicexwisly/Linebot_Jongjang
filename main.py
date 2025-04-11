@@ -50,18 +50,28 @@ def search_product(keyword):
         try:
             stock = float(stock_raw)
         except ValueError:
-            continue
+            stock = 0
 
-        if (keyword in name or keyword in item_id) and stock > 0:
-            results.append(row)
+        if keyword in name or keyword in item_id:
+            results.append({
+                "ไอเท็ม": item_id,
+                "สินค้า": name,
+                "ราคา": row.get("ราคา", ""),
+                "stock": stock_raw,
+                "stock_day": row.get("Stock day", "-"),
+                "on_order": row.get("On order", "-")
+            })
 
     if not results:
-        return f"❌ ไม่พบสินค้าหรือไอเท็ม \"{keyword}\" ที่มี Stock มากกว่า 0"
+        return f"❌ ไม่พบสินค้าหรือไอเท็ม \"{keyword}\""
 
-    lines = [
-        f"- {r['ไอเท็ม']} | {r['สินค้า']} | {r['ราคา']} บาท | เหลือ {r['มี Stock อยู่ที่']} ชิ้น"
-        for r in results
-    ]
+    lines = []
+    for r in results:
+        lines.append(
+            f"- {r['ไอเท็ม']} | {r['สินค้า']} | {r['ราคา']} บาท\n"
+            f"  เหลือ {r['stock']} ชิ้น | Stock day: {r['stock_day']} | On order: {r['on_order']}\n"
+        )
+
     return "\n".join(lines)
 
 @app.route("/callback", methods=["POST"])
