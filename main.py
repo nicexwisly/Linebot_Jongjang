@@ -41,7 +41,7 @@ def search_product(keyword):
     if not json_data:
         return "❌ ยังไม่มีข้อมูลสินค้า กรุณาอัปโหลดไฟล์ก่อน"
 
-    results = [row for row in json_data if keyword in row.get("สินค้า", "")]
+    results = [row for row in json_data if keyword in str(row.get("สินค้า", ""))]
     print(f"[DEBUG] พบ {len(results)} รายการที่ match กับ keyword")
 
     if not results:
