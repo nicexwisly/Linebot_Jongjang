@@ -2,11 +2,12 @@ from flask import Flask, request, jsonify
 import pandas as pd
 import os
 import requests
+from datetime import datetime
 
 app = Flask(__name__)
 
 FILE_NAME = "data.xlsx"
-LINE_ACCESS_TOKEN = os.getenv("LINE_CHANNEL_ACCESS_TOKEN") or "YEECvUaqmXwCfMq2iFPTrzctFgj/BBMLcalaHei2myZT+9mOheNn8QFzwNPA6zvWrD/F5BSXgZ7noMupqPXgTzetpUAswQ3as+BY2Az/GYE3JCKAMhlhc3ayOvk/tW7tiwDS/9RYz12PKOZ9z4nTBwdB04t89/1O/w1cDnyilFU="
+LINE_ACCESS_TOKEN = os.getenv("LINE_CHANNEL_ACCESS_TOKEN") or "9spdlar4aOXRzhHf+XTwS3ZOC+Ya6KsET864BZwnAJPlJZspkRCoYpVWFNLmowSPQlANaXWCgmU8JpDx6asksVn5768f8j150oksJA84zBOdWV/3jWPpgbCb89RT2I0fTWSyAMnJ1HF5vQokPCrkbQdB04t89/1O/w1cDnyilFU="
 
 def reply_to_line(reply_token, message):
     headers = {
@@ -51,7 +52,7 @@ def search_product(keyword):
     print(f"[DEBUG] รายการที่เจอ:", row)
 
     try:
-        return f"พบแล้วค่ะ: {row.get('ไอเท็ม')} {row.get('สินค้า')} ราคา {row.get('ราคา')} บาท เหลือ {row.get('มี Stock อยู่ที่')} ชิ้น"
+        return f"{row.get('ไอเท็ม')} {row.get('สินค้า')} ราคา {row.get('ราคา')} บาท เหลือ {row.get('มี Stock อยู่ที่')} ชิ้น"
     except Exception as e:
         return f"⚠️ เกิดข้อผิดพลาดในการอ่านข้อมูล: {str(e)}"
 
@@ -67,11 +68,11 @@ def callback():
                 reply_token = event["replyToken"]
                 print("👤 user_msg:", user_msg)
 
-                if user_msg.startswith("สินค้า:"):
-                    keyword = user_msg.replace("สินค้า:", "").strip()
+                if user_msg.startswith("@@"):
+                    keyword = user_msg.replace("@@", "").strip()
                     answer = search_product(keyword)
                 else:
-                    answer = "กรุณาพิมพ์ว่า สินค้า: ตามด้วยชื่อสินค้าที่ต้องการค้นหา"
+                    answer = "กรุณาพิมพ์ว่า @@ ตามด้วยชื่อสินค้าที่ต้องการค้นหา"
 
                 reply_to_line(reply_token, answer)
         return jsonify({"status": "ok"}), 200
@@ -96,7 +97,15 @@ def upload_json():
 
 @app.route("/", methods=["GET"])
 def home():
+    user_agent = request.headers.get("User-Agent", "")
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    if "UptimeRobot" in user_agent:
+        print(f"[{timestamp}] 📡 UptimeRobot pinged this server.")
+    else:
+        print(f"[{timestamp}] 🌐 Regular browser/server accessed home route.")
+
     return "ระบบพร้อมทำงานแล้ว!"
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000, debug=True)  # ✅ debug=True
+    app.run(host="0.0.0.0", port=10000, debug=True)  # ✅ debug=Truez   
