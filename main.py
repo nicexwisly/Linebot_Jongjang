@@ -35,14 +35,25 @@ def upload_file():
 
 def search_product(keyword):
     global json_data
+    print(f"[DEBUG] keyword ที่รับมา: {keyword}")
+    print(f"[DEBUG] จำนวน json_data ทั้งหมด: {len(json_data)}")
+
     if not json_data:
         return "❌ ยังไม่มีข้อมูลสินค้า กรุณาอัปโหลดไฟล์ก่อน"
-    
+
     results = [row for row in json_data if keyword in row.get("สินค้า", "")]
+    print(f"[DEBUG] พบ {len(results)} รายการที่ match กับ keyword")
+
     if not results:
         return "❌ ขออภัย ไม่พบสินค้าที่ค้นหาในระบบ"
+
     row = results[0]
-    return f"พบแล้วค่ะ: {row['ไอเท็ม']} {row['สินค้า']} ราคา {row['ราคา']} บาท เหลือ {row['มี Stock อยู่ที่']} ชิ้น"
+    print(f"[DEBUG] รายการที่เจอ:", row)
+
+    try:
+        return f"พบแล้วค่ะ: {row.get('ไอเท็ม')} {row.get('สินค้า')} ราคา {row.get('ราคา')} บาท เหลือ {row.get('มี Stock อยู่ที่')} ชิ้น"
+    except Exception as e:
+        return f"⚠️ เกิดข้อผิดพลาดในการอ่านข้อมูล: {str(e)}"
 
 @app.route("/callback", methods=["POST"])
 def callback():
