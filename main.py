@@ -39,11 +39,11 @@ def search_product(keyword):
     if not json_data:
         return "❌ ยังไม่มีข้อมูลสินค้า กรุณาอัปโหลดไฟล์ก่อน"
 
-    keyword = keyword.strip()
+    keyword = keyword.strip().lower().replace(" ", "")
     results = []
 
     for row in json_data:
-        name = row.get("สินค้า", "")
+        name = row.get("สินค้า", "").lower().replace(" ", "")
         item_id = str(row.get("ไอเท็ม", "")).split(".")[0]
         stock_raw = row.get("มี Stock อยู่ที่", "").replace("~", "").strip()
 
@@ -56,7 +56,7 @@ def search_product(keyword):
             results.append(row)
 
     if not results:
-        return f"❌ ไม่พบสินค้าหรือไอเท็ม \"{keyword}\" ที่มี Stock มากกว่า 0"
+        return f"❌ ไม่พบสินค้าหรือไอเท็ม \"{keyword}\" กรุณาลองอีกครั้ง"
 
     lines = [
         f"- {r['ไอเท็ม']} | {r['สินค้า']} | {r['ราคา']} บาท | เหลือ {r['มี Stock อยู่ที่']} ชิ้น | On {r['On Order']} mu"
