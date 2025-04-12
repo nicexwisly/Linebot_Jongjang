@@ -52,7 +52,7 @@ def search_product(keyword):
         except ValueError:
             continue
 
-        if (keyword in name or keyword in item_id) and stock > 0:
+        if (keyword in name or keyword in item_id) and stock != 0:
             results.append(row)
 
     if not results:
