@@ -70,8 +70,8 @@ def search_product(keyword):
     full_message = "\n\n".join(lines)
     if len(full_message) > MAX_LINE_LENGTH:
         return (
-        f"❗️พบรายการสินค้าที่มีคำว่า \"{keyword}\" จำนวนมากเกินไป\n"
-        f"ไม่สามารถแสดงรายการทั้งหมดได้\n"
+        f"❗️พบรายการสินค้าที่มีคำว่า \"{keyword}\" ทั้งหมด {len(results)} รายการ\n"
+        f"ทำให้ไม่สามารถแสดงรายการทั้งหมดได้\n"
         f"กรุณาระบุสินค้าให้เฉพาะเจาะจงขึ้นหรือรหัสสินค้า"
     )
 
