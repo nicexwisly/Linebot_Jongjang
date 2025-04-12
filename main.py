@@ -52,8 +52,10 @@ def search_product(keyword):
         except ValueError:
             continue
 
-        if (keyword in name or keyword in item_id) and stock != 0:
-            results.append(row)
+        # ✅ ย้าย if เข้ามาใน loop
+        if keyword in name or keyword in item_id:
+            if stock != 0:
+                results.append(row)
 
     if not results:
         return f"❌ ไม่พบสินค้าหรือไอเท็ม \"{keyword}\" กรุณาลองอีกครั้ง"
