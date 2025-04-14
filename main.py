@@ -59,12 +59,23 @@ def search_product(keyword):
 
     if not results:
         return f"❌ ไม่พบสินค้าหรือไอเท็ม \"{keyword}\" กรุณาลองอีกครั้ง"
+    
+    MAX_LINE_LENGTH = 4500  # กันไว้ก่อน 5,000 ตัว
 
     lines = [
-        f"- {r['ไอเท็ม']} | {r['สินค้า']} | {r['ราคา']} บาท | เหลือ {r['มี Stock อยู่ที่']} ชิ้น | On {r['On Order']} mu"
-        for r in results
-    ]
-    return "\n".join(lines)
+    f"- {r.get('ไอเท็ม', '')} | PLU: {r.get('PLU', 'ไม่พบ')} | {r.get('สินค้า', '')} | {r.get('ราคา', '')} บาท | เหลือ {r.get('มี Stock อยู่ที่', '')} ชิ้น | On {r.get('On Order', '')} mu"
+    for r in results
+]
+
+    full_message = "\n\n".join(lines)
+    if len(full_message) > MAX_LINE_LENGTH:
+        return (
+        f"❗️พบรายการสินค้าที่มีคำว่า \"{keyword}\" ทั้งหมด {len(results)} รายการ\n"
+        f"ทำให้ไม่สามารถแสดงรายการทั้งหมดได้\n"
+        f"กรุณาระบุสินค้าให้เฉพาะเจาะจงขึ้นหรือรหัสสินค้า"
+    )
+
+    return full_message
 
 @app.route("/callback", methods=["POST"])
 def callback():
