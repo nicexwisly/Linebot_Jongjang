@@ -59,7 +59,7 @@ def search_product(keyword):
         return f"❌ ไม่พบสินค้าหรือไอเท็ม \"{keyword}\" ที่มี Stock มากกว่า 0"
 
     lines = [
-        f"- {r['ไอเท็ม']} | {r['สินค้า']} | {r['ราคา']} บาท | เหลือ {r['มี Stock อยู่ที่']} ชิ้น | On {r['On Order']} วัน | PLU {r['PLU']}"
+        f"- {r['ไอเท็ม']} | {r['สินค้า']} | {r['ราคา']} บาท | เหลือ {r['มี Stock อยู่ที่']} ชิ้น | On {r['On Order']} วัน "
         for r in results
     ]
     return "\n".join(lines)
