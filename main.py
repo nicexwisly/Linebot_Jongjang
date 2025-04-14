@@ -39,11 +39,11 @@ def search_product(keyword):
     if not json_data:
         return "❌ ยังไม่มีข้อมูลสินค้า กรุณาอัปโหลดไฟล์ก่อน"
 
-    keyword = keyword.strip().lower().replace(" ", "")
+    keyword = keyword.strip()
     results = []
 
     for row in json_data:
-        name = row.get("สินค้า", "").lower().replace(" ", "")
+        name = row.get("สินค้า", "")
         item_id = str(row.get("ไอเท็ม", "")).split(".")[0]
         stock_raw = row.get("มี Stock อยู่ที่", "").replace("~", "").strip()
 
@@ -52,30 +52,17 @@ def search_product(keyword):
         except ValueError:
             continue
 
-        # ✅ ย้าย if เข้ามาใน loop
-        if keyword in name or keyword in item_id:
-            if stock != 0:
-                results.append(row)
+        if (keyword in name or keyword in item_id) and stock > 0:
+            results.append(row)
 
     if not results:
-        return f"❌ ไม่พบสินค้าหรือไอเท็ม \"{keyword}\" กรุณาลองอีกครั้ง"
-    
-    MAX_LINE_LENGTH = 4500  # กันไว้ก่อน 5,000 ตัว
+        return f"❌ ไม่พบสินค้าหรือไอเท็ม \"{keyword}\" ที่มี Stock มากกว่า 0"
 
     lines = [
-        f"- {r['ไอเท็ม']} | {r['สินค้า']} | {r['ราคา']} บาท | เหลือ {r['มี Stock อยู่ที่']} ชิ้น | On {r['On Order']} mu"
+        f"- {r['ไอเท็ม']} | {r['สินค้า']} | {r['ราคา']} บาท | เหลือ {r['มี Stock อยู่ที่']} ชิ้น | On {r['On Order']} วัน | PLU {r['PLU']}"
         for r in results
     ]
-
-    full_message = "\n\n".join(lines)
-    if len(full_message) > MAX_LINE_LENGTH:
-        return (
-        f"❗️พบรายการสินค้าที่มีคำว่า \"{keyword}\" ทั้งหมด {len(results)} รายการ\n"
-        f"ทำให้ไม่สามารถแสดงรายการทั้งหมดได้\n"
-        f"กรุณาระบุสินค้าให้เฉพาะเจาะจงขึ้นหรือรหัสสินค้า"
-    )
-
-    return full_message
+    return "\n".join(lines)
 
 @app.route("/callback", methods=["POST"])
 def callback():
