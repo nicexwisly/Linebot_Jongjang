@@ -19,7 +19,6 @@ def reply_to_line(reply_token, message):
         "messages": [{"type": "text", "text": message}]
     }
     r = requests.post("https://api.line.me/v2/bot/message/reply", headers=headers, json=body)
-    print("LINE API response:", r.status_code, r.text)
 
 @app.route("/api/upload-file", methods=["POST"])
 def upload_file():
@@ -99,27 +98,41 @@ def callback():
     except Exception as e:
         print("❌ Error:", str(e))
         return jsonify({"error": str(e)}), 500
-    
+
 json_data = []  # ตัวแปรสำหรับเก็บ JSON ที่ upload เข้ามา
+
+@app.before_request
+def log_uptime_ping():
+    user_agent = request.headers.get("User-Agent", "")
+    if request.method == "HEAD" and "UptimeRobot" in user_agent:
+        from datetime import datetime
+        print(f"✅ Ping จาก UptimeRobot at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", flush=True)
 
 @app.route("/api/upload-json", methods=["POST"])
 def upload_json():
     global json_data
     try:
         json_data = request.get_json()
-        print("✅ ได้รับ JSON แล้ว:", len(json_data), "รายการ")
+        print("✅ Upload Json success:", flush=True)
         return jsonify({"status": "success"})
     except Exception as e:
         print("ERROR:", str(e)) 
         return jsonify({"status": "error", "message": str(e)}), 500
+    
+@app.route("/api/upload-log", methods=["POST"])
+def upload_log():
+    try:
+        data = request.get_json()
+        msg = data.get("message", "📋 ไม่มีข้อความ")
+        timestamp = data.get("time", datetime.now().isoformat())
+        print(f"{timestamp} | {msg}", flush=True)
+        return jsonify({"status": "received"}), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 @app.route("/", methods=["GET", "HEAD"])
 def home():
-    user_agent = request.headers.get("User-Agent", "")
-    if "UptimeRobot" in user_agent:
-        print("📡 ตรวจพบการ Ping จาก UptimeRobot")
-        return "Ping จาก UptimeRobot", 200
-    return "ระบบพร้อมทำงานแล้ว!", 200
+    return "OK", 200
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000, debug=True)  # ✅ debug=Truez   
