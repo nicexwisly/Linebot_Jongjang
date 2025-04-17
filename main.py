@@ -55,8 +55,8 @@ def search_product(keyword):
         except ValueError:
             continue
 
-        if stock == 0:
-            continue
+        # if stock == 0:
+        #    continue
 
         if is_plu_search:
             if search_value == plu:
@@ -66,7 +66,9 @@ def search_product(keyword):
                 results.append(row)
 
     if not results:
-        return f"❌ ไม่พบ '{keyword}' กรุณาลองใหม่อีกครั้ง"
+        return f"❌ ไม่พบสินค้า '{keyword}' กรุณาลองใหม่อีกครั้ง"
+    
+    results = sorted(results, key=lambda r: float(str(r.get("มี Stock อยู่ที่", "0")).replace("~", "").strip()), reverse=True)
 
     MAX_LINE_LENGTH = 4500
     lines = [
@@ -76,13 +78,21 @@ def search_product(keyword):
 
     full_message = "\n\n".join(lines)
     if len(full_message) > MAX_LINE_LENGTH:
-        return (
-            f"❗️พบรายการสินค้าที่มีคำว่า \"{keyword}\" ทั้งหมด {len(results)} รายการ\n"
-            f"ทำให้ไม่สามารถแสดงรายการทั้งหมดได้\n"
-            f"กรุณาระบุสินค้าให้เฉพาะเจาะจงขึ้นหรือรหัสสินค้า"
-        )
+        top_results = sorted(
+        results,
+        key=lambda r: float(str(r.get("มี Stock อยู่ที่", "0")).replace("~", "").strip()),
+        reverse=True
+        )[:10]
+
+        top_lines = [
+        f"- {r['ไอเท็ม']} | {r['สินค้า']} | {r['ราคา']} บาท | เหลือ {r['มี Stock อยู่ที่']} ชิ้น | On {r['On Order']} mu"
+        for r in top_results
+    ]
+
+        return "\n\n".join(top_lines)
 
     return full_message
+
 @app.route("/callback", methods=["POST"])
 def callback():
     body = request.json
@@ -136,6 +146,14 @@ def upload_log():
         return jsonify({"status": "received"}), 200
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
+    
+@app.route("/api/logs", methods=["GET"])
+def get_logs():
+    try:
+        with open("log.txt", "r", encoding="utf-8") as f:
+            return f.read()
+    except:
+        return "❌ ไม่พบ log"  
 
 @app.route("/", methods=["GET", "HEAD"])
 def home():
