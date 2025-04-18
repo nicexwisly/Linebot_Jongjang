@@ -85,7 +85,7 @@ def search_product(keyword):
         )[:10]
 
         top_lines = [
-        f"- {r['ไอเท็ม']} | {r['สินค้า']} | {r['ราคา']} บาท | เหลือ {r['มี Stock อยู่ที่']} ชิ้น | On {r['On Order']} mu"
+        f"- {r['ไอเท็ม']} | {r['PLU']} | {r['สินค้า']} | {r['ราคา']} บาท | เหลือ {r['มี Stock อยู่ที่']} ชิ้น | On {r['On Order']} mu"
         for r in top_results
     ]
 
