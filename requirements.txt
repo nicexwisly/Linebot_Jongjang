@@ -1,4 +1,6 @@
-Flask
+gunicorn
+flask
 pandas
 openpyxl
 requests
+
