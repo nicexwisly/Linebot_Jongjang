@@ -48,6 +48,7 @@ def search_product(keyword):
         name = row.get("สินค้า", "").lower().replace(" ", "")
         item_id = str(row.get("ไอเท็ม", "")).split(".")[0]
         plu = str(row.get("PLU", "")).strip()
+        barcode = str(row.get("Barcode", "")).strip()
         stock_raw = row.get("มี Stock อยู่ที่", "").replace("~", "").strip()
 
         try:
@@ -62,7 +63,7 @@ def search_product(keyword):
             if search_value == plu:
                 results.append(row)
         else:
-            if search_value in name or search_value in item_id:
+            if search_value in name or search_value == item_id or search_value == barcode:
                 results.append(row)
 
     if not results:
