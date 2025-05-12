@@ -48,9 +48,14 @@ def search_product(keyword):
         name = row.get("สินค้า", "").lower().replace(" ", "")
         item_id = str(row.get("ไอเท็ม", "")).split(".")[0]
         plu = str(row.get("PLU", "")).strip()
-        barcodes = row.get("Barcode", [])
-        if isinstance(barcodes, str):
-            barcodes = [barcodes.strip()]
+        barcodes = []
+        raw_barcode = row.get("Barcode", [])
+        if raw_barcode is None:
+            barcodes = []
+        elif isinstance(raw_barcode, str):
+            barcodes = [raw_barcode.strip()]
+        else:
+            barcodes = raw_barcode
         stock_raw = row.get("มี Stock อยู่ที่", "").replace("~", "").strip()
 
         try:
