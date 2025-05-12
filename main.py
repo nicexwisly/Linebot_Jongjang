@@ -68,12 +68,12 @@ def search_product(keyword):
             if (
                 search_value in name    
                 or search_value == item_id
-                or search_value == barcodes
+                or search_value in barcodes
             ):
                 results.append(row)
                 
-            if not results:
-                 return f"❌ ไม่พบสินค้า '{keyword}' กรุณาลองใหม่อีกครั้ง"
+    if not results:
+        return f"❌ ไม่พบสินค้า '{keyword}' กรุณาลองใหม่อีกครั้ง"
     
     results = sorted(results, key=lambda r: float(str(r.get("มี Stock อยู่ที่", "0")).replace("~", "").strip()), reverse=True)
 
