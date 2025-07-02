@@ -263,42 +263,46 @@ def search_product(keyword):
                     day_map = {
                         "Mon": "M", "Tue": "Tu", "Wed": "W", "Thu": "Th", 
                         "Fri": "Fr", "Sat": "Sa", "Sun": "Su",
-                    }
-                    return day_map.get(dt.strftime("%a"), "?")
+                    }.get(dt.strftime("%a"), "?")
 
                 lines = ["Date    | Sales | Rec  | Adj  | SOH"]
                 
                 # เพิ่มข้อมูลจาก Sales_Realtime เป็นบรรทัดแรก (ถ้ามี)
-                if sales_realtime is not None:
-                    try:
-                        # ลบ comma ออกจากตัวเลข
-                        realtime_sales_str = str(sales_realtime).replace(',', '') if sales_realtime is not None else '0'
-                        current_stock_str = str(current_stock).replace(',', '').replace('~', '').strip() if current_stock is not None else '0'
-                        
-                        realtime_sales = float(realtime_sales_str)
-                        realtime_stock = float(current_stock_str)
-                        
-                        # สร้างวันที่วันนี้
-                        today = datetime.now()
-                        today_day = short_dayname(today)
-                        today_date = f"{today_day} {today.day}/{today.month}"
-                        
-                        realtime_line = (
-                            f"{today_date.ljust(8)}| "
-                            f"{str(int(round(realtime_sales))).rjust(5)} | "
-                            f"{str(0).rjust(5)} | "
-                            f"{str(0).rjust(5)} | "
-                            f"{str(int(round(realtime_stock))).rjust(4)}"
-                        )
-                        lines.append(realtime_line)
-                    except Exception as e:
-                        print(f"Error processing Sales_Realtime data: {e}")
-                
-                for i in sorted_indexes:
+                try:
+                    sales_realtime_value = float(str(sales_realtime).replace(",", "").strip()) if sales_realtime else 0
+                    stock_value = float(str(current_stock).replace(",", "").replace("~", "").strip()) if current_stock else 0
+
+                    raw_gor = row.get("GOR_Received")
+                    if isinstance(raw_gor, list):
+                        gor_value = float(raw_gor[0]) if raw_gor else 0
+                    elif isinstance(raw_gor, str):
+                        gor_value = float(raw_gor.strip().replace(",", "") or 0)
+                    elif isinstance(raw_gor, (int, float)):
+                        gor_value = float(raw_gor)
+                    else:
+                        gor_value = 0
+
+                    today = datetime.now()
+                    today_day = short_dayname(today)
+                    today_date = f"{today_day} {today.day}/{today.month}"
+
+                    line_today = (
+                        f"{today_date.ljust(8)}| "
+                        f"{str(int(round(sales_realtime_value))).rjust(5)} | "
+                        f"{str(int(round(gor_value))).rjust(5)} | "
+                        f"{str(0).rjust(5)} | "
+                        f"{str(int(round(stock_value))).rjust(4)}"
+                    )
+                    lines.append(line_today)
+                    print("✅ เพิ่มบรรทัดวันนี้:", line_today)
+                except Exception as e:
+                    print("❌ Error generating today's line:", str(e))
+                    print("🔍 GOR_Received raw:", row.get("GOR_Received"))
+
+                for i in sorted_indexes[:7]:
                     try:
                         d = datetime.strptime(dates[i], "%Y-%m-%d")
-                        day = short_dayname(d)
-                        short_date = f"{day} {d.day}/{d.month}"
+                        short_date = f"{short_dayname(d)} {d.day}/{d.month}"
                     except:
                         short_date = dates[i]
 
@@ -313,14 +317,17 @@ def search_product(keyword):
                     lines.append(line)
 
                 header = (
-                    f"ไอเท็ม: {item_id} | Dept: {depts[0]} | Class: {classes[0]}\n"
+                    f"ไอเท็ม: {item_id} | Dept: {depts[0] if depts else '-'} | Class: {classes[0] if classes else '-'}\n"
                     f"สินค้า: {row.get('สินค้า', '')}"
                 )
-                
-                # ส่งกลับเป็น Flex Message สำหรับรายละเอียดสินค้า
-                return create_item_detail_flex(header, lines)
 
-        return f"❌ ไม่พบข้อมูลไอเท็ม '{item_id}'"
+                print("📦 lines ที่จะส่งเข้า Flex Message:")
+                for l in lines:
+                    print("➡️", l)
+
+                return create_item_detail_flex(header, lines)
+            
+        return f"❌ ไม่พบข้อมูลไอเท็ม '{item_id}'"                                        
 
     # ค้นหาสินค้าปกติ - ส่งกลับเป็นข้อความธรรมดา
     for row in json_data:
@@ -357,7 +364,7 @@ def search_product(keyword):
         return f"❌ ไม่พบสินค้า '{keyword}' กรุณาลองใหม่อีกครั้ง"
     
     # เรียงตาม Stock จากมากไปน้อย
-    results = sorted(results, key=lambda r: float(str(r.get("มี Stock อยู่ที่", "0")).replace("~", "").strip()), reverse=True)
+    results = sorted(results, key=lambda r: float(str(r.get("มี Stock อยู่ที่", "0")).replace(",", "").replace("~", "").strip()), reverse=True)
 
     # จำกัดจำนวนผลลัพธ์
     max_results = 10
@@ -379,7 +386,7 @@ def search_product(keyword):
         display_name = name[:40] + "..." if len(name) > 40 else name
         
         # กำหนดไอคอนสำหรับ stock
-        stock_value = float(str(stock).replace("~", "").strip() or "0")
+        stock_value = float(str(stock).replace(",", "").replace("~", "").strip() or "0")
         stock_icon = "❌" if stock_value <= 0 else "✅"
         
         response_text += f"{i}. {display_name}\n"
