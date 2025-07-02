@@ -342,7 +342,7 @@ def search_product(keyword):
             barcodes = [raw_barcode.strip()]
         else:
             barcodes = raw_barcode
-        stock_raw = row.get("มี Stock อยู่ที่", "").replace("~", "").strip()
+        stock_raw = row.get("มี Stock อยู่ที่", "").replace(",", "").replace("~", "").strip()
 
         try:
             stock = float(stock_raw)
@@ -364,7 +364,11 @@ def search_product(keyword):
         return f"❌ ไม่พบสินค้า '{keyword}' กรุณาลองใหม่อีกครั้ง"
     
     # เรียงตาม Stock จากมากไปน้อย
-    results = sorted(results, key=lambda r: float(str(r.get("มี Stock อยู่ที่", "0")).replace(",", "").replace("~", "").strip()), reverse=True)
+    results = sorted(
+        results,
+        key=lambda r: float(str(r.get("มี Stock อยู่ที่", "0")).replace(",", "").replace("~", "").strip() or "0"),
+        reverse=True
+    )
 
     # จำกัดจำนวนผลลัพธ์
     max_results = 10
